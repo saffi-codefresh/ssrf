@@ -1,0 +1,17 @@
+{
+  "name": "node-redirect",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "blubird": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "ip": "^1.1.5",
+    "private-ip": "^2.3.3",
+    "request": "^2.88.2"
+  }
+}
