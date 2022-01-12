@@ -1,7 +1,7 @@
 const assertLib =  require('assert');
 const assert = assertLib.strict;
 const http = require('http');
-const { httpGet, requestGet } = require('./ssrf-filter');
+const { httpSsrfGet, requestSsrfGet } = require('./ssrf-filter');
 
 const server = http.createServer(function (req, res) {
     const url = req.url;
@@ -46,31 +46,31 @@ const url404 = `${baseurl}/notfound`;
 const testHttp = async () => {
     const trace = true;
     // fail
-    // await httpGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
+    // await httpSsrfGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
 
-    await httpGet({ trace, url: baseurl });
-    await httpGet({ trace, url: google });
-    await httpGet({ trace, url: `http://private.com:${PORT}` });
+    await httpSsrfGet({ trace, url: baseurl, ssrf: false });
+    await httpSsrfGet({ trace, url: google, ssrf: false });
+    await httpSsrfGet({ trace, url: `http://private.com:${PORT}`, ssrf: false });
     var hadFailedCnt = 0;
     try {
-        await httpGet({ trace, url: baseurl, ssrf: true });
+        await httpSsrfGet({ trace, url: baseurl, ssrf: true });
     } catch(err) {
         hadFailedCnt++;
     }
     assert(hadFailedCnt===1);
     try {
-        await httpGet({ trace, url: google, ssrf: true });
+        await httpSsrfGet({ trace, url: google, ssrf: true });
     } catch(err) {
         hadFailedCnt++;
     }
     assert(hadFailedCnt===2);
     try {
-        await httpGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
+        await httpSsrfGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
     } catch(err) {
         hadFailedCnt ++;
     }
     assert(hadFailedCnt===3);
-    await httpGet({ trace, url: `http://private.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
+    await httpSsrfGet({ trace, url: `http://private.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
 };
 
 testHttp()
@@ -86,40 +86,40 @@ testHttp()
 const testRequest = async () => {
     const trace = true;
     // fail
-    // await httpGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
+    // await httpSsrfGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
 
-    await requestGet({ trace, url: baseurl });
-    await requestGet({ trace, url: google });
-    await requestGet({ trace, url: `http://private.com:${PORT}` });
+    await requestSsrfGet({ trace, url: baseurl, ssrf: false });
+    await requestSsrfGet({ trace, url: google, ssrf: false });
+    await requestSsrfGet({ trace, url: `http://private.com:${PORT}`, ssrf: false });
     var hadFailedCnt = 0;
     try {
-        await requestGet({ trace, url: baseurl, ssrf: true });
+        await requestSsrfGet({ trace, url: baseurl, ssrf: true });
     } catch(err) {
         hadFailedCnt++;
     }
     assert(hadFailedCnt===1);
     try {
-        await requestGet({ trace, url: google, ssrf: true });
+        await requestSsrfGet({ trace, url: google, ssrf: true });
     } catch(err) {
         hadFailedCnt++;
     }
     assert(hadFailedCnt===2);
     try {
-        await requestGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
+        await requestSsrfGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
     } catch(err) {
         hadFailedCnt ++;
     }
     assert(hadFailedCnt===3);
-    await requestGet({ trace, url: `http://private.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
+    await requestSsrfGet({ trace, url: `http://private.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
     try {
-        await requestGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true });
+        await requestSsrfGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true });
     } catch(err) {
         hadFailedCnt ++;
     }
     assert(hadFailedCnt===4);
-    await requestGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'rprivate.com'] });
+    await requestSsrfGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'rprivate.com'] });
     try {
-        await requestGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
+        await requestSsrfGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
     } catch(err) {
         hadFailedCnt ++;
     }

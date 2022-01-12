@@ -50,7 +50,7 @@ const getAgent = ({ url, ssrf = true, allowListDomains = [], trace = false }) =>
     new Error(`Bad protocol, url must start with http/https, Got ${url}`);
 };
 
-async function httpGet({ url, trace = true, ssrf = false, allowListDomains = [] }) {
+async function httpSsrfGet({ url, trace = true, ssrf = false, allowListDomains = [] }) {
     trace && console.log(`Calling ${url} ssrf:${ssrf} allowListDomains:${allowListDomains}`);
     const options = {
         agent: getAgent({ url, ssrf, allowListDomains, trace })
@@ -81,7 +81,7 @@ async function httpGet({ url, trace = true, ssrf = false, allowListDomains = [] 
     trace && console.log(`Called ${url} return ${JSON.stringify(result)}`);
 }
 
-async function requestGet({ url, trace = true, ssrf = false, allowListDomains = [] }) {
+async function requestSsrfGet({ url, trace = true, ssrf = true, allowListDomains = [] }) {
     trace && console.log(`requestGet Calling ${url} ssrf:${ssrf} allowListDomains:${allowListDomains}`);
     const options = {
         agent: getAgent({ url, ssrf, allowListDomains, trace })
@@ -96,4 +96,4 @@ async function requestGet({ url, trace = true, ssrf = false, allowListDomains = 
 }
 
 
-module.exports = { getAgent, httpGet, requestGet };
+module.exports = { getAgent, httpSsrfGet, requestSsrfGet };
