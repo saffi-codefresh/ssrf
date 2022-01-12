@@ -1,38 +1,8 @@
 const assertLib =  require('assert');
 const assert = assertLib.strict;
 const http = require('http');
-const { httpGet } = require('./ssrf-filter');
+const { httpGet, requestGet } = require('./ssrf-filter');
 
-// var request = require("request"),
-//   options = {
-//     uri: 'http://www.someredirect.com/somepage.asp',
-//     timeout: 2000,
-//     followAllRedirects: false
-//   };
-
-// const request = require('request-promise');
-// const httpGet = async (url) => {
-//   const waitfor = new Promise((resolve, reject) => {
-//     http.get(url, (resp) => {
-//       let data = '';
-//
-//       // a data chunk has been received.
-//       resp.on('data', (chunk) => {
-//         data += chunk;
-//       });
-//
-//       // complete response has been received.
-//       resp.on('end', () => {
-//         resolve(data)
-//       });
-//
-//     }).on("error", (err) => {
-//         reject(err);
-//         });
-//   });
-//   await waitfor;
-//
-// }
 const server = http.createServer(function (req, res) {
     const url = req.url;
 
@@ -53,6 +23,12 @@ const server = http.createServer(function (req, res) {
             location: 'https://google.com',
         });
         res.end();
+    }else if (url === '/rprivate.com') {
+        // do a 302 redirect
+        res.writeHead(302, {
+            location: 'https://private.com',
+        });
+        res.end();
     } else {
         // do a 404 redirect
         res.writeHead(404);
@@ -67,7 +43,7 @@ const baseurl = `http://0.0.0.0:${PORT}`;
 const google = `${baseurl}/google`;
 const url404 = `${baseurl}/notfound`;
 
-const test = async () => {
+const testHttp = async () => {
     const trace = true;
     // fail
     // await httpGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
@@ -97,16 +73,62 @@ const test = async () => {
     await httpGet({ trace, url: `http://private.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
 };
 
-test()
+testHttp()
     .then(() => {console.log(`Done`);})
     .catch(error => {
         console.log(`Had err ${error}`);
         throw error;
     });
-//
-// but it might have redirect issue.
-// request(url, {
-//   agent: ssrfAgent(url)
-// }, (err, response, body) => {
-//
-// })
+
+
+
+
+const testRequest = async () => {
+    const trace = true;
+    // fail
+    // await httpGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
+
+    await requestGet({ trace, url: baseurl });
+    await requestGet({ trace, url: google });
+    await requestGet({ trace, url: `http://private.com:${PORT}` });
+    var hadFailedCnt = 0;
+    try {
+        await requestGet({ trace, url: baseurl, ssrf: true });
+    } catch(err) {
+        hadFailedCnt++;
+    }
+    assert(hadFailedCnt===1);
+    try {
+        await requestGet({ trace, url: google, ssrf: true });
+    } catch(err) {
+        hadFailedCnt++;
+    }
+    assert(hadFailedCnt===2);
+    try {
+        await requestGet({ trace, url: `http://private.com:${PORT}`, ssrf: true });
+    } catch(err) {
+        hadFailedCnt ++;
+    }
+    assert(hadFailedCnt===3);
+    await requestGet({ trace, url: `http://private.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
+    try {
+        await requestGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true });
+    } catch(err) {
+        hadFailedCnt ++;
+    }
+    assert(hadFailedCnt===4);
+    await requestGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'rprivate.com'] });
+    try {
+        await requestGet({ trace, url: `http://rprivate.com:${PORT}`, ssrf: true, allowListDomains:['xxxx.io', 'private.com'] });
+    } catch(err) {
+        hadFailedCnt ++;
+    }
+    assert(hadFailedCnt===5);
+};
+
+testRequest()
+    .then(() => {console.log(`Done`);})
+    .catch(error => {
+        console.log(`Had err ${error}`);
+        throw error;
+    });
